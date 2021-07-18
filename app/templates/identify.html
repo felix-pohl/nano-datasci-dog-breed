@@ -1,0 +1,51 @@
+<!doctype html>
+
+<head>
+    <title>Dog Breed Identifier</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+
+<body>
+
+    <header class="p-3 bg-dark text-white">
+        <div class="container">
+            <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+                <a href="." class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">Dog Breed
+                    Identifier</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container text-center">
+        <h2>Identify your dogs breed</h2>
+        <h3>(or which breed someone looks alike)</h3>
+        <p>
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            {% for message in messages %}
+        <div>{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        </p>
+        {% if filename %}
+        <div>
+            {% if prediction %}
+            <div>
+                {{prediction}}
+            </div>
+            {% endif %}
+            <img src="{{ url_for('display_image', filename=filename) }}" height="250" width="250">
+        </div>
+        {% endif %}
+        <form method="post" action="/" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="formFile" class="form-label">Select an image</label>
+                <input class="form-control" type="file" id="formFile" name="file" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Identify breed</button>
+        </form>
+    </div>
+</body>

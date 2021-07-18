@@ -48,6 +48,10 @@ The app consists of a cv_predictor that uses the pretrained model from the pytho
 	keras==2.4.3
 ```
 
+### Additional data before starting the App
+
+Donwload the [Resnet50 bottleneck features](https://s3-us-west-1.amazonaws.com/udacity-aind/dog-project/DogResnet50Data.npz) for the dog dataset.  Place it in the repo, at location `path/to/project/bottleneck_features`.
+
 ### Running the App
 
 Run the app by navigating to the app directory and execute 
@@ -56,3 +60,12 @@ Run the app by navigating to the app directory and execute
 cd app
 python run.py
 ```
+
+### Web App files
+
+- `app.py` starts a flask app and provides routes for form submission and results
+- `cv_predictor.py` uses the pretrained model to classify dog breeds. Humans and dogs are identified with ResNet and haarcascades.
+- `dog_names.py` List of dog breeds as the original dogs dataset is not included
+- `extract_bottleneck_features.py` utility for extracting features from different CNNs
+- `run.py` starts the app
+- `templates\identify.html` html markup providing a form and results

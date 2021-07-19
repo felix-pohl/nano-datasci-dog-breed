@@ -8,27 +8,51 @@ The goal of this project is providing a web app to make dog breed classification
 
 ## Problem Statement
 
-Idetifiying dog breeds from images alone can be quite problematic. Some breeds look very alike and can be misjudged by unexperienced people.
+Idetifiying dog breeds from images alone can be quite problematic. Some breeds look very alike and can be misjudged by unexperienced people. Computer Vision and CNNs for classification can aid in this process. CNNs can identify these small differences if trained apropriately. 
+
+The solution should be able to automaticly identify a dog's breed by taking a photo of a dog and providing this photo to the trained CNN. This will be done in a web app, but could also be used in native apps or desktop apps.
+
+If an image of a person is uploaded instead a judgemnt should be made which breed this person looks alike.
+
+If no human or dog is identifyable in the image, no prediction will be made.
 
 ## Metrics
 
-Trained CNNs are evaluated on their accuracy against a prelabeled validation set. Accuracy measures the percentage of successfully classified breeds.
+Models are scored on their accuracy of correctly identifying a breed. As identification of a breed is the only relavant outcome and is a binary decision accuracy is a good metric. Accuracy will be calculated based an amount of successful identifications in all predictions.
 
 # Analysis
 
 ## Data Exploration
 
-On first inspection our dataset of dogs with labeled breeds consists of 8351 images in 133 categories. Images are not of uniform size and will have to be preprocessed to fit.
+On first inspection our dataset of dogs with labeled breeds consists of 8351 images in 133 categories. All breeds are represented in the dataset. On average 63 images should be present per breed. 
+
+On closer observation breeds are not represented equaly and some are represented with more than 90 images where others only have close to 40. This could lead to a bias in our model as some species are overrepresented.
+
+Two breeds are represented by only 33 images: 107.Norfolk_terrier and 131.Wirehaired_pointing_griffon.
+
+Three breeds are represented white over 90 images: 4.Akita , 28.Bluetick_coonhound and 14.Basenji.
+
+Images contain varying background, angles and positions of dogs. This is beneficial as it prepares our model for user generated images which can not be controlled.
+
+The images are not of uniform size and have to be resized in the data preparation step.
+
+Names of breeds are identified by parsing the names of the training data. As each breed name starts with its corresponding categorical id breeds can be identified by name.
 
 ## Data Visualization
 
-Data was not visualized for this project as it just consists of images and labels for these images.
+To support data exploration this histigram supports the previous statements and shows the distribution of all breeds in the dataset. Breeds are adressed by their categorical id, as names would have been overly long.
+
+![dog breed distribution](breed_distribution.png)
 
 # Methodology
 
 ## Data Preparation
 
-Data was pre-split into training, validation and testing data. Images are resized when loaded as tensors for the CNN. All images have to be of same size and a square of 224 x 224 pxiels was chosen.
+Data was pre-split into training, validation and testing data. As the provides images are of different sizes each image ist loaded as a 224 x 224 pixel version, making them uniform and fit for our CNNs.
+
+As we can not input images directly we have to convert image data to an array with additional depth 3, as each pixel consists of RGB values. The resulting tensor has dimensionality (224,224,3) and describes each pixel.
+
+As Keras needs a 4D tensor with the first value representing the number of samples, dimensionality is increasd by 1 with a default value of 1. A default value of 1 is chosen because only 1 image is persent in this tensor.
 
 ## Implementation
 
@@ -76,13 +100,77 @@ In this model multipe convolutionla, pooling and dropout layers are followed by 
 
 ## Refinement
 
-The solution was further refined by using transfer learing from Resnet50 for excelent breed identification.
+The model was improved by adding additinal convolutional layers for better feature detection and dropout layers to combat overfitting.
+
+This architecture was ultimately dropped as it was becoming to ressource intensive. Further improvements were made by using pretrained models and leveraging transfer learning.
+
+A first attempt was made with VGG16. Importing predefined features helped improve accuracy to over 50% from unter 10% for my own model. 
+
+The transfer learning model consists of import layer for the VGG16 Features and a dense layer to map these features onto dog breeds.
+
+```
+bottleneck_features = np.load('bottleneck_features/DogVGG16Data.npz')
+train_VGG16 = bottleneck_features['train']
+VGG16_model = Sequential()
+VGG16_model.add(GlobalAveragePooling2D(input_shape=train_VGG16.shape[1:]))
+VGG16_model.add(Dense(133, activation='softmax'))
+
+VGG16_model.summary()
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+global_average_pooling2d_1 ( (None, 512)               0         
+_________________________________________________________________
+dense_25 (Dense)             (None, 133)               68229     
+=================================================================
+Total params: 68,229
+Trainable params: 68,229
+Non-trainable params: 0
+_________________________________________________________________
+
+Test accuracy: 51.6746%
+```
+
+The solution was further refined by using transfer learing from an established CNN Resnet50 for excelent breed identification.
+
+Transfer Learning from a pretrained Resnet50 model increased accuracy dramaticaly
+
+The final solution consists of a feature extraction layer from Resnet50 and a dense layer for mapping these features onto the 133 breeds.
+
+```
+bottleneck_features = np.load('bottleneck_features/DogResnet50Data.npz')
+train_Resnet50 = bottleneck_features['train']
+Resnet50_model = Sequential()
+Resnet50_model.add(GlobalAveragePooling2D(input_shape=train_Resnet50.shape[1:]))
+Resnet50_model.add(Dense(133, activation='softmax'))
+
+Resnet50_model.summary()
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+global_average_pooling2d_3 ( (None, 2048)              0         
+_________________________________________________________________
+dense_27 (Dense)             (None, 133)               272517    
+=================================================================
+Total params: 272,517
+Trainable params: 272,517
+Non-trainable params: 0
+_________________________________________________________________
+
+Test accuracy: 81.6986%
+
+```
+
+This model scored a test accuracy of 81.6986% in identifying the correct breed.
+ 
 
 # Results
 
 ## Model Evaluation and Validation
 
-Model training used a split training and test dataset and was validated by a seperate validation set. Model weights were only passed on when loss on the validation dataset was better than previous iterations.
+The final model uses pretrained features from an established CNN (ResNet50). Features are imported into the model and are mapped to 133 breeds.
+
+Tests returned an accuracy of over 80%.
 
 ## Justification
 
